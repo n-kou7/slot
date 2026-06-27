@@ -18,7 +18,7 @@ const LABEL = {
   SEVEN:"7"
 };
 
-// 番号対応: 1=BAR, 2=ベル, 3=チェリー, 4=ピエロ, 5=犬, 6=ぶどう, 7=7
+// 1=BAR, 2=ベル, 3=チェリー, 4=ピエロ, 5=犬, 6=ぶどう, 7=7
 const NUM = { "1":"BAR", "2":"BELL", "3":"CHERRY", "4":"CLOWN", "5":"DOG", "6":"GRAPE", "7":"SEVEN" };
 
 const STRIP_NUMBERS = [
@@ -30,8 +30,9 @@ const STRIP_NUMBERS = [
 const STRIPS = STRIP_NUMBERS.map(s => [...s].map(n => NUM[n]));
 
 const H = 112;
-const SPEED = 17;      // コマ/秒
-const STOP_MS = 300;
+const SPEED = 16;      // コマ/秒
+const STOP_MS = 320;
+const DIRECTION = -1;  // -1: 上から下へ流れる見え方 / 1: 逆方向
 const $ = id => document.getElementById(id);
 const mod = (n,m) => ((n % m) + m) % m;
 const easeOut = t => 1 - Math.pow(1 - t, 3);
@@ -43,45 +44,45 @@ class Reel {
     this.strip = STRIPS[index];
     this.len = this.strip.length;
 
-    // center = 中段にあるコマ番号。整数ならピッタリ停止。
+    // center = 中段ラインにある絵柄番号。整数停止でズレなし。
     this.center = 0;
     this.running = false;
     this.stopping = false;
-    this.last = 0;
     this.raf = null;
+    this.last = 0;
 
     this.el.innerHTML = '<div class="strip"></div>';
     this.stripEl = this.el.firstChild;
-    this.build();
-    this.apply();
+    this.draw();
   }
 
-  build() {
-    this.stripEl.innerHTML = "";
-    // 3周分を描画。真ん中の周を基準に表示。
-    for (let loop = 0; loop < 3; loop++) {
-      for (const sym of this.strip) {
-        const cell = document.createElement("div");
-        cell.className = "cell";
-        cell.innerHTML = `<img src="${IMG[sym]}" alt="${sym}">`;
-        this.stripEl.appendChild(cell);
-      }
-    }
-  }
-
-  apply() {
-    const c = mod(this.center, this.len);
-    // 画面の中段に、真ん中周の c 番目の絵柄を合わせる
-    const y = H - (this.len + c) * H;
-    this.stripEl.style.transform = `translate3d(0, ${y}px, 0)`;
-  }
-
-  currentIndex() {
+  currentInteger() {
     return mod(Math.round(this.center), this.len);
   }
 
   currentSymbol() {
-    return this.strip[this.currentIndex()];
+    return this.strip[this.currentInteger()];
+  }
+
+  draw() {
+    const nearest = Math.round(this.center);
+    const diff = this.center - nearest;
+
+    // DIRECTION=-1の時、絵柄が上から下に流れるように位置補正
+    const y = -H - diff * H;
+
+    this.stripEl.style.transform = `translate3d(0, ${y}px, 0)`;
+    this.stripEl.innerHTML = "";
+
+    // 5コマだけ描く。画面外へ飛ばない方式。
+    for (let row = -2; row <= 2; row++) {
+      const idx = mod(nearest + row, this.len);
+      const sym = this.strip[idx];
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.innerHTML = `<img src="${IMG[sym]}" alt="${sym}">`;
+      this.stripEl.appendChild(cell);
+    }
   }
 
   start() {
@@ -92,15 +93,12 @@ class Reel {
 
     const tick = ts => {
       if (!this.running || this.stopping) return;
-
       const dt = (ts - this.last) / 1000;
       this.last = ts;
 
-      // 回転方向。
-      // これで逆なら、下の += を -= に変えればOK。
-      this.center += SPEED * dt;
+      this.center += DIRECTION * SPEED * dt;
+      this.draw();
 
-      this.apply();
       this.raf = requestAnimationFrame(tick);
     };
 
@@ -113,23 +111,28 @@ class Reel {
     cancelAnimationFrame(this.raf);
 
     const from = this.center;
-
-    // 2〜5コマ先で整数に止める。毎回ピッタリ整数に丸めるのでズレない。
     const slip = 2 + Math.floor(Math.random() * 4);
-    const to = Math.ceil(this.center) + slip;
+
+    // 回転方向に合わせて整数コマへ停止
+    let to;
+    if (DIRECTION < 0) {
+      to = Math.floor(this.center) - slip;
+    } else {
+      to = Math.ceil(this.center) + slip;
+    }
 
     const start = performance.now();
 
     const tick = ts => {
       const t = Math.min(1, (ts - start) / STOP_MS);
       this.center = from + (to - from) * easeOut(t);
-      this.apply();
+      this.draw();
 
       if (t < 1) {
         this.raf = requestAnimationFrame(tick);
       } else {
         this.center = Math.round(to);
-        this.apply();
+        this.draw();
         this.running = false;
         this.stopping = false;
         done && done();
@@ -144,7 +147,7 @@ class Reel {
     this.center = 0;
     this.running = false;
     this.stopping = false;
-    this.apply();
+    this.draw();
   }
 }
 
@@ -158,7 +161,7 @@ function setMessage(t) {
 
 function updateInfo() {
   reels.forEach((r,i) => {
-    $("v" + i).textContent = `${r.currentIndex()+1}コマ目 / ${LABEL[r.currentSymbol()]}`;
+    $("v" + i).textContent = `${r.currentInteger()+1}コマ目 / ${LABEL[r.currentSymbol()]}`;
   });
 }
 
@@ -171,7 +174,6 @@ function updateButtons() {
 
 function lever() {
   if (spinning) return;
-
   spinning = true;
   stopped = [false,false,false];
 
