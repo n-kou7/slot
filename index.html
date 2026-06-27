@@ -23,7 +23,7 @@ const mark={seven:'7️⃣',bar:'BAR',grape:'🍇',cherry:'🍒',replay:'🔁',b
 const strips=[['bell','replay','grape','cherry','blank','seven','grape','bell','bar','replay','grape','blank','cherry','bell','grape','seven','replay','blank','grape','bar','bell'],['grape','bell','replay','blank','bar','grape','bell','cherry','replay','seven','grape','blank','bell','replay','grape','bar','blank','bell','seven','grape','cherry'],['replay','grape','bell','blank','seven','cherry','grape','replay','bell','bar','blank','grape','bell','replay','cherry','grape','seven','blank','bell','grape','bar']];
 const prob={1:{big:1/273,reg:1/440,grape:1/6.4},2:{big:1/270,reg:1/400,grape:1/6.3},3:{big:1/268,reg:1/360,grape:1/6.2},4:{big:1/262,reg:1/315,grape:1/6.05},5:{big:1/258,reg:1/285,grape:1/5.9},6:{big:1/255,reg:1/255,grape:1/5.75}};
 const $=id=>document.getElementById(id), reels=[$('r0'),$('r1'),$('r2')], stripEls=reels.map(r=>r.querySelector('.strip')), stops=[$('s0'),$('s1'),$('s2')];
-let st={credit:50,bet:0,games:0,big:0,reg:0,grape:0,spin:false,stopped:[true,true,true],pos:[0,3,6],target:[0,0,0],flag:'none'};
+let st={credit:50,bet:0,games:0,big:0,reg:0,grape:0,spin:false,stopped:[true,true,true],pos:[0,3,6],target:[0,0,0],flag:'none',replayReady:false};
 function msg(t){$('msg').textContent=t} function lamp(v){$('lamp').classList.toggle('on',v)}
 function update(){$('credit').textContent=st.credit;$('games').textContent=st.games;$('big').textContent=st.big;$('reg').textContent=st.reg;$('grape').textContent=st.grape;$('bet').disabled=st.spin||st.bet>0||st.credit<3;$('lever').disabled=st.spin||st.bet<3;stops.forEach((b,i)=>b.disabled=!st.spin||st.stopped[i])}
 function draw(){strips.forEach((a,i)=>{stripEls[i].innerHTML='';a.concat(a,a).forEach(k=>{let d=document.createElement('div');d.className='cell';d.innerHTML=k==='bar'?'<span class="bar">BAR</span>':mark[k];stripEls[i].appendChild(d)});setReel(i,st.pos[i],false)})}
@@ -32,11 +32,29 @@ function flag(){const p=prob[$('setting').value],r=Math.random();let a=0;for(con
 function want(f){return f==='big'?'seven':f==='reg'?'bar':f==='grape'?'grape':f==='replay'?'replay':f==='cherry'?'cherry':f==='bell'?'bell':'blank'}
 function targets(f){let w=want(f);return strips.map(a=>{if(f==='none')return Math.floor(Math.random()*a.length);let h=a.map((x,i)=>x===w?i:-1).filter(i=>i>=0);return h[Math.floor(Math.random()*h.length)]})}
 function noAccident(){let c=st.pos.map((p,i)=>strips[i][p]);if(c[0]===c[1]&&c[1]===c[2])st.pos[2]=(st.pos[2]+1)%strips[2].length}
-function bet(){if(st.credit<3||st.bet)return;st.credit-=3;st.bet=3;msg('レバーON！');update()}
-function start(){if(st.spin||st.bet<3)return;st.games++;st.spin=true;st.stopped=[false,false,false];st.flag=flag();st.target=targets(st.flag);lamp(false);msg('左・中・右の停止ボタンで止めてね');reels.forEach(r=>r.classList.add('spinning'));update()}
+function bet(){if(st.credit<3||st.bet)return;st.credit-=3;st.bet=3;st.replayReady=false;msg('レバーON！');update()}
+function start(){if(st.spin||st.bet<3)return;st.games++;st.spin=true;st.stopped=[false,false,false];st.flag=flag();st.target=targets(st.flag);st.replayReady=false;lamp(false);msg('左・中・右の停止ボタンで止めてね');reels.forEach(r=>r.classList.add('spinning'));update()}
 function stop(i){if(!st.spin||st.stopped[i])return;st.stopped[i]=true;reels[i].classList.remove('spinning');st.pos[i]=st.target[i];if(st.flag==='none')noAccident();setReel(i,st.pos[i]);update();if(st.stopped.every(Boolean))setTimeout(finish,220)}
-function finish(){st.spin=false;st.bet=0;let add=0,t='ハズレ',bonus=false;if(st.flag==='big'){add=252;t='BIG BONUS！';st.big++;bonus=true}else if(st.flag==='reg'){add=96;t='REG BONUS！';st.reg++;bonus=true}else if(st.flag==='grape'){add=7;t='ぶどう +7';st.grape++}else if(st.flag==='replay'){add=3;t='リプレイ 払戻し'}else if(st.flag==='cherry'){add=2;t='チェリー +2'}else if(st.flag==='bell'){add=10;t='ベル +10'}st.credit+=add;msg(t+(st.credit<3?' / CREDIT不足ならリセット':''));lamp(bonus);update()}
-function reset(){st={credit:50,bet:0,games:0,big:0,reg:0,grape:0,spin:false,stopped:[true,true,true],pos:[0,3,6],target:[0,0,0],flag:'none'};reels.forEach(r=>r.classList.remove('spinning'));lamp(false);msg('BETしてレバーON');draw();update()}
+function lineSymbols(){return st.pos.map((p,i)=>strips[i][p])}
+function isLine(k){const c=lineSymbols();return c[0]===k&&c[1]===k&&c[2]===k}
+function finish(){
+  st.spin=false;
+  let add=0,t='ハズレ',bonus=false,nextReplay=false;
+  const hitBig=isLine('seven'), hitReg=isLine('bar');
+  if(hitBig){add=252;t='7揃い！ BIG BONUS 成立';st.big++;bonus=true}
+  else if(hitReg){add=96;t='BAR揃い！ REG BONUS 成立';st.reg++;bonus=true}
+  else if(isLine('grape')){add=7;t='ぶどう +7';st.grape++}
+  else if(isLine('replay')){t='リプレイ！BETなしで再遊技できます';nextReplay=true}
+  else if(isLine('cherry')){add=2;t='チェリー +2'}
+  else if(isLine('bell')){add=10;t='ベル +10'}
+  st.credit+=add;
+  st.bet=nextReplay?3:0;
+  st.replayReady=nextReplay;
+  msg(t+(st.credit<3&&!nextReplay?' / CREDIT不足ならリセット':''));
+  lamp(bonus);
+  update();
+}
+function reset(){st={credit:50,bet:0,games:0,big:0,reg:0,grape:0,spin:false,stopped:[true,true,true],pos:[0,3,6],target:[0,0,0],flag:'none',replayReady:false};reels.forEach(r=>r.classList.remove('spinning'));lamp(false);msg('BETしてレバーON');draw();update()}
 $('bet').onclick=bet;$('lever').onclick=start;$('reset').onclick=reset;stops.forEach((b,i)=>b.onclick=()=>stop(i));draw();update();
 })();
 </script>
