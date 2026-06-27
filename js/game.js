@@ -61,7 +61,7 @@ class Reel{
 
  centerIndexFromOffset(offset=this.offset){
   // 上から下に流れるので、見た目の中段indexは offset/H 分だけ逆に進む
-  return mod(Math.round(-offset/H), this.len);
+  return mod(Math.round(offset/H), this.len);
  }
 
  syncPos(){
@@ -84,7 +84,7 @@ class Reel{
    if(!this.spinning || this.stopping)return;
    const dt=(ts-this.lastTs)/1000;
    this.lastTs=ts;
-   this.offset += SPEED*dt; // 正方向＝絵柄が上から下へ流れる
+   this.offset -= SPEED*dt; // 逆方向回転
    this.apply();
    this.anim=requestAnimationFrame(tick);
   };
@@ -102,9 +102,8 @@ class Reel{
  findStopForSymbol(symbolKey){
   const current=this.centerIndexFromOffset();
   // 4コマ以内で「その絵柄を中段に持ってくる」候補を探す
-  // 下方向回転なので、停止可能な中段indexは current, current-1, current-2...
   for(let slip=0;slip<=MAX_SLIP;slip++){
-   const idx=mod(current-slip,this.len);
+   const idx=mod(current+slip,this.len);
    if(this.strip[idx]===symbolKey)return idx;
   }
   return null;
@@ -113,8 +112,8 @@ class Reel{
  offsetForCenterIndex(idx){
   // centerIndexFromOffset(offset) == idx になるoffsetを、現在より先の位置で求める
   const total=this.len*H;
-  let target= -idx*H;
-  while(target <= this.offset + 2) target += total;
+  let target= idx*H;
+  while(target >= this.offset - 2) target -= total;
   return target;
  }
 
