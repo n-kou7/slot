@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>ペカっとスロット</title>
+<style>
+  :root{
+    --bg:#151515; --panel:#222; --panel2:#2f2f2f; --gold:#e9c46a; --red:#e63946; --blue:#4cc9f0;
+    --green:#80ed99; --white:#f7f7f7; --muted:#888;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:radial-gradient(circle at 50% 0%,#3b2d2d,#111 58%);color:var(--white);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;overflow:hidden;touch-action:manipulation;}
+  .app{height:100%;display:flex;align-items:center;justify-content:center;padding:14px;}
+  .machine{width:min(96vw,760px);height:min(96vh,1000px);border-radius:34px;background:linear-gradient(#5b1118,#25090d 34%,#141414 35%,#050505);border:7px solid #111;box-shadow:0 20px 60px #000, inset 0 0 0 4px #8b1b26;position:relative;padding:18px;display:flex;flex-direction:column;gap:12px;}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .title{font-size:clamp(26px,6vw,48px);font-weight:900;letter-spacing:.04em;color:#ffd166;text-shadow:0 3px 0 #6d1420,0 0 18px #ffdd77;}
+  .settings{display:flex;align-items:center;gap:8px;background:#111;border:2px solid #555;border-radius:14px;padding:8px 10px;}
+  select,button{font:inherit;}
+  select{font-size:18px;border-radius:10px;border:0;padding:7px 10px;background:#eee;color:#111;}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:#111;border-radius:18px;padding:10px;border:2px solid #444;}
+  .stat{text-align:center;background:#020202;border-radius:12px;padding:6px 4px;border:1px solid #333;}
+  .stat b{display:block;color:#ffe066;font-size:clamp(18px,4vw,30px);font-family:ui-monospace,Menlo,monospace;line-height:1.05;}
+  .stat span{font-size:12px;color:#aaa;}
+  .reelBox{background:linear-gradient(90deg,#080808,#303030,#080808);border-radius:28px;padding:18px;border:5px solid #d6a92d;box-shadow:inset 0 0 30px #000;}
+  .reels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;height:clamp(220px,38vh,360px);}
+  .reel{background:#f5f1dc;border-radius:18px;border:6px solid #111;overflow:hidden;position:relative;box-shadow:inset 0 0 15px #0008;}
+  .reel:before,.reel:after{content:"";position:absolute;left:0;right:0;height:33.333%;border-top:2px solid #0001;border-bottom:2px solid #0001;z-index:3;pointer-events:none;}
+  .reel:before{top:0;background:linear-gradient(#0005,#0000);}
+  .reel:after{bottom:0;background:linear-gradient(#0000,#0005);}
+  .strip{position:absolute;left:0;right:0;top:0;transition:transform .22s cubic-bezier(.12,.82,.2,1);}
+  .spinning .strip{animation:spin .18s linear infinite;transition:none;}
+  @keyframes spin{from{transform:translateY(-33.333%)}to{transform:translateY(0)}}
+  .cell{height:calc(clamp(220px,38vh,360px) / 3);display:flex;align-items:center;justify-content:center;font-size:clamp(48px,12vw,92px);border-bottom:1px solid #0001;text-shadow:0 2px 0 #fff;}
+  .payline{position:absolute;left:20px;right:20px;top:50%;height:4px;background:#ff284f;box-shadow:0 0 12px #ff284f;z-index:8;transform:translateY(-50%);pointer-events:none;}
+  .centerPanel{display:grid;grid-template-columns:1fr 170px 1fr;gap:12px;align-items:center;}
+  .lamp{height:150px;border-radius:50%;background:radial-gradient(circle at 50% 38%,#555,#222 45%,#050505 70%);border:7px solid #111;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:900;font-size:34px;letter-spacing:.08em;color:#777;box-shadow:inset 0 0 22px #000;user-select:none;}
+  .lamp.on{background:radial-gradient(circle at 50% 38%,#fff,#a2f2ff 30%,#0eb5ff 58%,#003b63 80%);color:#fff;text-shadow:0 0 8px #00e5ff,0 0 18px #fff;box-shadow:0 0 28px #00c8ff,0 0 65px #4cc9f0,inset 0 0 18px #fff;animation:peka .75s ease-in-out infinite alternate;}
+  @keyframes peka{from{filter:brightness(.9)}to{filter:brightness(1.25)}}
+  .message{min-height:150px;background:#050505;border:2px solid #555;border-radius:18px;padding:12px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:clamp(20px,4vw,34px);color:#eee;}
+  .credit{background:#050505;border:2px solid #555;border-radius:18px;padding:12px;text-align:center;}
+  .credit b{display:block;font-family:ui-monospace,Menlo,monospace;font-size:clamp(34px,8vw,58px);color:#80ed99;text-shadow:0 0 12px #00ff88;}
+  .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end;}
+  .lever,.stop,.bet{border:0;border-radius:20px;color:#fff;font-weight:900;box-shadow:0 7px 0 #000, inset 0 2px 0 #fff5;min-height:76px;touch-action:manipulation;}
+  .lever{background:linear-gradient(#ff5964,#b91523);font-size:clamp(24px,5vw,40px);grid-column:1/2;}
+  .bet{background:linear-gradient(#6c757d,#343a40);font-size:22px;}
+  .stop{background:linear-gradient(#4361ee,#17237d);font-size:clamp(28px,6vw,46px);height:92px;border-radius:50%;}
+  .stop:disabled,.lever:disabled,.bet:disabled{filter:grayscale(1) brightness(.55);box-shadow:0 3px 0 #000;transform:translateY(4px);}
+  .stopRow{grid-column:1/4;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .footer{font-size:12px;color:#aaa;text-align:center;line-height:1.4;}
+  .winFlash{animation:flash .16s linear 8;}
+  @keyframes flash{50%{filter:brightness(1.8)}}
+  @media (max-height:780px){.lamp,.message{height:110px;min-height:110px}.cell{font-size:54px}.stop{height:72px}.lever,.bet{min-height:58px}.footer{display:none}.machine{gap:8px;padding:12px}.reelBox{padding:12px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="machine" id="machine">
+    <div class="top">
+      <div class="title">ペカっとスロット</div>
+      <div class="settings">設定
+        <select id="setting">
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6" selected>6</option>
+        </select>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="games">0</b><span>GAMES</span></div>
+      <div class="stat"><b id="big">0</b><span>BIG</span></div>
+      <div class="stat"><b id="reg">0</b><span>REG</span></div>
+      <div class="stat"><b id="grape">0</b><span>ぶどう</span></div>
+    </div>
+    <div class="reelBox">
+      <div class="reels">
+        <div class="reel" id="reel0"><div class="strip"></div></div>
+        <div class="reel" id="reel1"><div class="strip"></div></div>
+        <div class="reel" id="reel2"><div class="strip"></div></div>
+      </div>
+      <div class="payline"></div>
+    </div>
+    <div class="centerPanel">
+      <div class="credit">CREDIT<b id="credit">50</b></div>
+      <div class="lamp" id="lamp">PEKA</div>
+      <div class="message" id="message">BETしてレバーON</div>
+    </div>
+    <div class="controls">
+      <button class="bet" id="betBtn">BET 3枚</button>
+      <button class="lever" id="lever">レバーON</button>
+      <button class="bet" id="reset">リセット</button>
+      <div class="stopRow">
+        <button class="stop" id="stop0" disabled>止</button>
+        <button class="stop" id="stop1" disabled>止</button>
+        <button class="stop" id="stop2" disabled>止</button>
+      </div>
+    </div>
+    <div class="footer">※実機の名称・配列・画像・音を使わない、オリジナル告知タイプの練習用スロットです。</div>
+  </div>
+</div>
+<script>
+(() => {
+  const symbols = {
+    seven:'7️⃣', bar:'BAR', bell:'🔔', grape:'🍇', cherry:'🍒', replay:'🔁', blank:'⭐'
+  };
+  // オリジナル配列。実機配列の丸写しではありません。
+  const strips = [
+    ['bell','replay','grape','cherry','blank','seven','grape','bell','bar','replay','grape','blank','cherry','bell','grape','seven','replay','blank','grape','bar','bell'],
+    ['grape','bell','replay','blank','bar','grape','bell','cherry','replay','seven','grape','blank','bell','replay','grape','bar','blank','bell','seven','grape','cherry'],
+    ['replay','grape','bell','blank','seven','cherry','grape','replay','bell','bar','blank','grape','bell','replay','cherry','grape','seven','blank','bell','grape','bar']
+  ];
+  const payout = {big:252, reg:96, grape:7, bell:10, replay:3, cherry:2};
+  const probs = {
+    1:{big:1/273, reg:1/440, grape:1/6.4, replay:1/7.3, cherry:1/35, bell:1/120},
+    2:{big:1/270, reg:1/400, grape:1/6.3, replay:1/7.3, cherry:1/34, bell:1/115},
+    3:{big:1/268, reg:1/360, grape:1/6.2, replay:1/7.3, cherry:1/33, bell:1/110},
+    4:{big:1/262, reg:1/315, grape:1/6.05, replay:1/7.3, cherry:1/32, bell:1/105},
+    5:{big:1/258, reg:1/285, grape:1/5.9, replay:1/7.3, cherry:1/31, bell:1/100},
+    6:{big:1/255, reg:1/255, grape:1/5.75, replay:1/7.3, cherry:1/30, bell:1/95}
+  };
+  const el = id => document.getElementById(id);
+  const reels = [el('reel0'),el('reel1'),el('reel2')];
+  const stripsEl = reels.map(r=>r.querySelector('.strip'));
+  const stops = [el('stop0'),el('stop1'),el('stop2')];
+  const state = {credit:50, bet:0, games:0, big:0, reg:0, grape:0, spinning:false, stopped:[true,true,true], pos:[0,0,0], target:null, flag:'none'};
+
+  function drawStrips(){
+    strips.forEach((arr,i)=>{
+      stripsEl[i].innerHTML = '';
+      // 前後に余白ぶん複製して見える範囲を作る
+      const view = arr.concat(arr).concat(arr);
+      view.forEach(k=>{
+        const d = document.createElement('div');
+        d.className='cell';
+        d.textContent=symbols[k];
+        if(k==='bar'){ d.style.fontSize='clamp(30px,7vw,56px)'; d.style.fontWeight='900'; d.style.color='#111'; }
+        stripsEl[i].appendChild(d);
+      });
+      setReel(i, state.pos[i], false);
+    });
+  }
+  function cellH(){ return reels[0].clientHeight/3; }
+  function setReel(i, centerIndex, animate=true){
+    const h = cellH();
+    const n = strips[i].length;
+    const base = n + centerIndex - 1; // 上段がcenter-1になる位置
+    stripsEl[i].style.transition = animate ? 'transform .22s cubic-bezier(.12,.82,.2,1)' : 'none';
+    stripsEl[i].style.transform = `translateY(${-base*h}px)`;
+  }
+  function update(){
+    el('credit').textContent=state.credit;
+    el('games').textContent=state.games;
+    el('big').textContent=state.big;
+    el('reg').textContent=state.reg;
+    el('grape').textContent=state.grape;
+    el('betBtn').disabled = state.spinning || state.credit<3 || state.bet===3;
+    el('lever').disabled = state.spinning || state.bet<3;
+  }
+  function msg(t){ el('message').textContent=t; }
+  function lamp(on){ el('lamp').classList.toggle('on', !!on); }
+  function randFlag(){
+    const p = probs[el('setting').value];
+    // チェリー重複っぽい先告知も少し混ぜる
+    const r = Math.random(); let acc=0;
+    const table = [
+      ['bigCherry', p.big*0.18], ['regCherry', p.reg*0.18],
+      ['big', p.big*0.82], ['reg', p.reg*0.82],
+      ['grape', p.grape], ['replay', p.replay], ['cherry', p.cherry], ['bell', p.bell]
+    ];
+    for(const [k,v] of table){ acc+=v; if(r<acc) return k; }
+    return 'none';
+  }
+  function desiredSymbol(flag){
+    if(flag==='big') return 'seven';
+    if(flag==='reg') return 'bar';
+    if(flag==='bigCherry' || flag==='regCherry' || flag==='cherry') return 'cherry';
+    if(flag==='grape') return 'grape';
+    if(flag==='replay') return 'replay';
+    if(flag==='bell') return 'bell';
+    return 'blank';
+  }
+  function pickTargets(flag){
+    const sym = desiredSymbol(flag);
+    return strips.map((arr,i)=>{
+      const hits = arr.map((v,idx)=>v===sym?idx:-1).filter(v=>v>=0);
+      if(flag==='none'){
+        // できるだけ3つ揃いを避ける
+        return Math.floor(Math.random()*arr.length);
+      }
+      return hits[Math.floor(Math.random()*hits.length)] ?? Math.floor(Math.random()*arr.length);
+    });
+  }
+  function ensureNoAccidentalWin(){
+    const centers = state.pos.map((p,i)=>strips[i][p]);
+    if(centers[0]===centers[1] && centers[1]===centers[2]){
+      state.pos[2] = (state.pos[2]+1)%strips[2].length;
+    }
+  }
+  function bet(){
+    if(state.credit>=3 && state.bet===0){ state.credit-=3; state.bet=3; msg('レバーON！'); update(); }
+  }
+  function start(){
+    if(state.bet<3 || state.spinning) return;
+    state.games++; state.spinning=true; state.stopped=[false,false,false]; state.flag=randFlag(); state.target=pickTargets(state.flag);
+    lamp(false); msg('回転中…好きな順に止めてね');
+    reels.forEach(r=>r.classList.add('spinning'));
+    stops.forEach(b=>b.disabled=false);
+    update();
+  }
+  function stop(i){
+    if(!state.spinning || state.stopped[i]) return;
+    state.stopped[i]=true; reels[i].classList.remove('spinning');
+    state.pos[i]=state.target[i];
+    if(state.flag==='none') ensureNoAccidentalWin();
+    setReel(i,state.pos[i],true);
+    stops[i].disabled=true;
+    if(state.stopped.every(Boolean)) setTimeout(finish,260);
+  }
+  function finish(){
+    state.spinning=false; state.bet=0;
+    const flag=state.flag;
+    let text='ハズレ'; let add=0; let bonus=false;
+    if(flag==='big'){ text='BIG BONUS！'; add=payout.big; state.big++; bonus=true; }
+    else if(flag==='reg'){ text='REG BONUS！'; add=payout.reg; state.reg++; bonus=true; }
+    else if(flag==='bigCherry'){ text='チェリー重複 BIG！'; add=payout.big+payout.cherry; state.big++; bonus=true; }
+    else if(flag==='regCherry'){ text='チェリー重複 REG！'; add=payout.reg+payout.cherry; state.reg++; bonus=true; }
+    else if(flag==='grape'){ text='ぶどう +7'; add=payout.grape; state.grape++; }
+    else if(flag==='replay'){ text='リプレイ 払戻し'; add=payout.replay; }
+    else if(flag==='cherry'){ text='チェリー +2'; add=payout.cherry; }
+    else if(flag==='bell'){ text='ベル +10'; add=payout.bell; }
+    state.credit += add;
+    msg(text);
+    lamp(bonus);
+    if(bonus){ el('machine').classList.add('winFlash'); setTimeout(()=>el('machine').classList.remove('winFlash'),1400); }
+    if(state.credit<3) msg(text+' / CREDIT不足ならリセット');
+    update();
+  }
+  function reset(){
+    Object.assign(state,{credit:50,bet:0,games:0,big:0,reg:0,grape:0,spinning:false,stopped:[true,true,true],pos:[0,3,6],target:null,flag:'none'});
+    reels.forEach(r=>r.classList.remove('spinning')); stops.forEach(b=>b.disabled=true); lamp(false); msg('BETしてレバーON');
+    state.pos.forEach((p,i)=>setReel(i,p,false)); update();
+  }
+  el('betBtn').addEventListener('click',bet);
+  el('lever').addEventListener('click',start);
+  el('reset').addEventListener('click',reset);
+  stops.forEach((b,i)=>b.addEventListener('click',()=>stop(i)));
+  window.addEventListener('resize',()=>state.pos.forEach((p,i)=>setReel(i,p,false)));
+  drawStrips(); reset();
+})();
+</script>
+</body>
+</html>
