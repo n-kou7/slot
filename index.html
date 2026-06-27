@@ -1,64 +1,34 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Dog Slot</title>
-<style>
-  :root{--bg:#142033;--panel:#1e2f48;--gold:#f8d45a;--red:#e64242;--blue:#4ba3ff;--text:#fff;--muted:#b9c7d8;}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent} body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#314a6d,#101827 58%,#080d16);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;color:var(--text);display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:manipulation;user-select:none}.app{width:min(100vw,980px);height:min(100vh,720px);padding:14px;display:flex;flex-direction:column;gap:12px}.top{display:flex;align-items:center;justify-content:space-between;gap:10px}.title{font-weight:900;font-size:clamp(22px,4vw,42px);letter-spacing:.06em;color:var(--gold);text-shadow:0 3px 0 #6b3e00,0 0 18px rgba(255,210,60,.35)}.lamp{width:140px;height:58px;border-radius:999px;background:#07090d;border:4px solid #394657;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;color:#394657;box-shadow:inset 0 0 18px #000}.lamp.on{color:#fff;background:radial-gradient(circle,#ff5353,#b50d0d 70%);border-color:#ffcf57;box-shadow:0 0 28px #ff3434,inset 0 0 12px #fff}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px 10px;text-align:center}.stat span{display:block;color:var(--muted);font-size:12px}.stat b{display:block;font-size:24px;line-height:1.1}.machine{flex:1;background:linear-gradient(#2a3d58,#172438);border:4px solid #526983;border-radius:24px;padding:14px;box-shadow:0 18px 45px rgba(0,0,0,.45), inset 0 0 0 4px rgba(255,255,255,.06);display:flex;flex-direction:column;gap:12px}.reels{position:relative;flex:1;min-height:250px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px;background:#0a0f18;border-radius:18px;border:3px solid #e0c15b}.payline{position:absolute;left:24px;right:24px;top:50%;height:5px;background:rgba(255,55,55,.75);box-shadow:0 0 12px rgba(255,0,0,.75);border-radius:5px;pointer-events:none;z-index:3}.reel{position:relative;overflow:hidden;background:linear-gradient(90deg,#d8d8d8,#fff 20%,#f2f2f2 80%,#cfcfcf);border:4px solid #202b38;border-radius:16px;box-shadow:inset 0 0 22px rgba(0,0,0,.35)}.strip{position:absolute;left:0;right:0;top:0}.cell{height:112px;display:flex;align-items:center;justify-content:center;border-bottom:1px solid rgba(0,0,0,.08)}.cell img{max-width:86%;max-height:92%;object-fit:contain;filter:drop-shadow(0 3px 1px rgba(0,0,0,.2))}.reel.stopped{box-shadow:0 0 0 3px var(--gold),inset 0 0 22px rgba(0,0,0,.35)}.message{min-height:42px;border-radius:14px;background:#07101d;border:2px solid #344b66;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:800;font-size:clamp(16px,2.8vw,24px);color:#ffe87a;padding:6px 10px}.controls{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.controls button{border:0;border-radius:14px;padding:14px 6px;font-size:clamp(14px,2.5vw,22px);font-weight:900;color:#fff;background:linear-gradient(#4d6c91,#26384f);box-shadow:0 5px 0 #101925;cursor:pointer}.controls button:active{transform:translateY(4px);box-shadow:0 1px 0 #101925}.controls button.primary{background:linear-gradient(#ff5a5a,#b81414);box-shadow:0 5px 0 #620606}.controls button.stop{background:linear-gradient(#5ab0ff,#1263b8);box-shadow:0 5px 0 #073465}.controls button:disabled{opacity:.45;filter:grayscale(1);transform:none}.help{font-size:12px;color:#b8c7d8;text-align:center}.bonusMode .machine{border-color:#ffdc59;box-shadow:0 0 30px rgba(255,220,89,.25),0 18px 45px rgba(0,0,0,.45)}
-  @media (max-height:560px){.app{height:100vh}.cell{height:88px}.top{display:none}.machine{padding:9px}.controls button{padding:10px 4px}.message{min-height:34px}.stats{grid-template-columns:repeat(4,1fr)}}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WAN WAN SLOT</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="app" id="app">
-  <div class="top"><div class="title">DOG SLOT</div><div class="lamp" id="gogoLamp">BONUS</div></div>
-  <div class="stats">
-    <div class="stat"><span>CREDIT</span><b id="credit">50</b></div>
-    <div class="stat"><span>BET</span><b id="bet">0</b></div>
-    <div class="stat"><span>WIN</span><b id="win">0</b></div>
-    <div class="stat"><span>MODE</span><b id="mode">通常</b></div>
-  </div>
-  <div class="machine">
-    <div class="reels" id="reels"><div class="payline"></div><div class="reel"><div class="strip" id="strip0"></div></div><div class="reel"><div class="strip" id="strip1"></div></div><div class="reel"><div class="strip" id="strip2"></div></div></div>
-    <div class="message" id="message">BETしてレバーON</div>
-    <div class="controls">
-      <button id="betBtn">BET</button><button id="maxBetBtn">MAX</button><button class="primary" id="leverBtn">レバー</button><button class="stop" id="stop0">左</button><button class="stop" id="stop1">中</button><button class="stop" id="stop2">右</button>
-    </div>
-  </div>
-  <div class="help">画像番号：0犬 / 1ぶどう / 2チェリー / 3ベル / 4ピエロ / 5BAR / 6セブン</div>
-</div>
-<script>
-'use strict';
-const SYMBOL={REPLAY:0,GRAPE:1,CHERRY:2,BELL:3,JOKER:4,BONUS:5,SEVEN:6};
-const SYMBOL_NAME=['犬リプレイ','ぶどう','チェリー','ベル','ピエロ','BAR','7'];
-const FLAG={NONE:0,REPLAY:1,GRAPE:2,CHERRY:3,BELL:4,JOKER:5,BIG:6,REG:7};
-const PAY={ [FLAG.REPLAY]:0, [FLAG.GRAPE]:8, [FLAG.CHERRY]:2, [FLAG.BELL]:10, [FLAG.JOKER]:6, [FLAG.BIG]:0, [FLAG.REG]:0 };
-const reels=[
-  [1,6,3,0,1,5,2,1,3,4,1,6,0,3,1,2,5,1,3,0,4],
-  [3,1,0,5,1,2,6,1,3,4,1,0,3,1,2,5,1,6,3,0,4],
-  [1,3,0,2,5,1,4,3,1,6,0,1,3,2,5,1,6,3,0,1,4]
-];
-const CELL=112, VISIBLE=3, CENTER_OFFSET=1;
-let credit=50, bet=0, win=0, spinning=false, replayCredit=false, currentFlag=FLAG.NONE, bonusStock=null, bonusGames=0;
-let pos=[0,0,0], speed=[0,0,0], timers=[null,null,null], stopped=[true,true,true];
-const $=id=>document.getElementById(id);
-const strips=[$('strip0'),$('strip1'),$('strip2')]; const reelEls=[...document.querySelectorAll('.reel')];
-function img(sym){return `<img src="images/${sym}.png" alt="${SYMBOL_NAME[sym]}">`;}
-function buildStrips(){reels.forEach((r,ri)=>{let html=''; for(let k=0;k<4;k++) r.forEach(s=>html+=`<div class="cell">${img(s)}</div>`); strips[ri].innerHTML=html;});}
-function draw(ri){const h=reels[ri].length*CELL; let y=-(pos[ri]%h); strips[ri].style.transform=`translateY(${y}px)`;}
-function setMsg(t){$('message').textContent=t;} function update(){ $('credit').textContent=credit; $('bet').textContent=bet; $('win').textContent=win; $('mode').textContent=bonusGames>0?'ボーナス':'通常'; $('gogoLamp').classList.toggle('on',!!bonusStock); document.body.classList.toggle('bonusMode',bonusGames>0); $('betBtn').disabled=spinning||bet>=3||credit<=0||replayCredit; $('maxBetBtn').disabled=spinning||bet>=3||credit<=0||replayCredit; $('leverBtn').disabled=spinning||bet<3; for(let i=0;i<3;i++) $('stop'+i).disabled=!spinning||stopped[i]; }
-function addBet(n){ if(spinning||replayCredit)return; while(n-- && bet<3 && credit>0){credit--; bet++;} update(); }
-function lottery(){ if(bonusStock) return bonusStock==='BIG'?FLAG.BIG:FLAG.REG; if(bonusGames>0){ const r=Math.random(); if(r<.45)return FLAG.GRAPE; if(r<.70)return FLAG.BELL; if(r<.85)return FLAG.CHERRY; if(r<.94)return FLAG.JOKER; return FLAG.REPLAY; } const r=Math.random(); if(r<1/120){bonusStock='BIG';return FLAG.BIG;} if(r<1/190){bonusStock='REG';return FLAG.REG;} if(r<.15)return FLAG.REPLAY; if(r<.36)return FLAG.GRAPE; if(r<.43)return FLAG.CHERRY; if(r<.48)return FLAG.BELL; if(r<.51)return FLAG.JOKER; return FLAG.NONE; }
-function targetSymbolForFlag(f){return ({[FLAG.REPLAY]:0,[FLAG.GRAPE]:1,[FLAG.CHERRY]:2,[FLAG.BELL]:3,[FLAG.JOKER]:4,[FLAG.BIG]:6,[FLAG.REG]:5})[f] ?? null;}
-function start(){ if(spinning||bet<3)return; win=0; currentFlag=lottery(); spinning=true; stopped=[false,false,false]; speed=[38,44,50]; reelEls.forEach(e=>e.classList.remove('stopped')); setMsg('ストップボタンで止めてね'); for(let i=0;i<3;i++){ clearInterval(timers[i]); timers[i]=setInterval(()=>{pos[i]=(pos[i]+speed[i])%(reels[i].length*CELL); draw(i);},16); } update(); }
-function stopReel(i){ if(!spinning||stopped[i])return; const target=targetSymbolForFlag(currentFlag); let bestIndex=Math.round(pos[i]/CELL)+CENTER_OFFSET; if(target!==null){ const base=Math.floor(pos[i]/CELL)+CENTER_OFFSET; for(let d=0; d<reels[i].length; d++){ const idx=(base+d)%reels[i].length; if(reels[i][idx]===target){bestIndex=idx;break;} } } const finalPos=(bestIndex-CENTER_OFFSET)*CELL; clearInterval(timers[i]); pos[i]=((finalPos%(reels[i].length*CELL))+(reels[i].length*CELL))%(reels[i].length*CELL); draw(i); stopped[i]=true; reelEls[i].classList.add('stopped'); if(stopped.every(Boolean)) finish(); update(); }
-function centerSymbols(){return reels.map((r,i)=>r[(Math.round(pos[i]/CELL)+CENTER_OFFSET)%r.length]);}
-function finish(){spinning=false; let sy=centerSymbols(); let allSame=sy[0]===sy[1]&&sy[1]===sy[2]; let msg=`停止：${sy.map(s=>SYMBOL_NAME[s]).join(' / ')}`; if(allSame){ if(sy[0]===0){replayCredit=true; bet=3; msg='リプレイ！BETそのまま再遊技';} else if(sy[0]===6 && bonusStock==='BIG'){bonusStock=null; bonusGames=18; msg='BIG BONUS 成立！';} else if(sy[0]===5 && bonusStock==='REG'){bonusStock=null; bonusGames=8; msg='BAR BONUS 成立！';} else { const f=Object.entries({1:FLAG.GRAPE,2:FLAG.CHERRY,3:FLAG.BELL,4:FLAG.JOKER})[sy[0]-1]?.[1]; if(f){win=PAY[f]; credit+=win; msg=`${SYMBOL_NAME[sy[0]]} ${win}枚払い出し`;}} } else if(currentFlag===FLAG.BIG||currentFlag===FLAG.REG){ msg='ボーナス成立中。狙って止めよう'; }
- if(bonusGames>0 && !(sy[0]===6||sy[0]===5)){ bonusGames--; if(bonusGames===0) msg+=' / ボーナス終了'; }
- if(!replayCredit) bet=0; setMsg(msg); update(); }
-$('betBtn').onclick=()=>addBet(1); $('maxBetBtn').onclick=()=>addBet(3); $('leverBtn').onclick=()=>{ if(replayCredit){replayCredit=false;} start();}; [0,1,2].forEach(i=>$('stop'+i).onclick=()=>stopReel(i));
-buildStrips(); for(let i=0;i<3;i++){pos[i]=i*CELL*2;draw(i);} update();
-</script>
+<main class="machine">
+  <header class="header">
+    <div class="counter"><span>CREDIT</span><b id="credit">50</b></div>
+    <div class="title"><img src="img/dog.png"><div><h1>WAN WAN SLOT</h1><p id="message">BETしてレバーON</p></div></div>
+    <div class="counter"><span>PAY</span><b id="payout">0</b></div>
+  </header>
+  <section class="status">
+    <span>G <b id="games">0</b></span><span>BIG <b id="bigCount">0</b></span><span>REG <b id="regCount">0</b></span><span>合算 <b id="totalRate">-</b></span><span>差枚 <b id="diff">0</b></span>
+    <span>設定 <select id="setting"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option></select></span>
+  </section>
+  <section class="reel-wrap">
+    <div class="payline"></div><div class="reel" id="reel0"></div><div class="reel" id="reel1"></div><div class="reel" id="reel2"></div>
+  </section>
+  <section class="lamp-wrap"><div class="lamp" id="lamp">CHANCE</div><div class="bet-view">BET <b id="bet">0</b></div></section>
+  <section class="controls">
+    <button id="betBtn" class="btn maxbet">MAX BET</button>
+    <button id="leverBtn" class="btn lever">レバーON</button>
+    <div class="stop-row"><button id="stop0" class="btn stop">左停止</button><button id="stop1" class="btn stop">中停止</button><button id="stop2" class="btn stop">右停止</button></div>
+    <button id="resetBtn" class="btn reset">リセット</button>
+  </section>
+  <section id="bonusPanel" class="bonus"><b id="bonusType">-</b> BONUS中　残り <b id="bonusRemain">0</b> 枚</section>
+</main>
+<script type="module" src="js/game.js"></script>
 </body>
 </html>
