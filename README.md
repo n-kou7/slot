@@ -1,12 +1,11 @@
-# WAN WAN REEL SAFE VISIBLE
+# WAN WAN REEL REALFIX
 
-リールが消えないことを最優先した版です。
+回転方向の本修正版です。
 
-- CSS transformなし
-- 3段の画像を直接差し替え
-- 指定配列反映
-- 停止後ズレなし
-- 回転方向は js/reel.js の DIR で固定
+変更点:
+- DIRだけでなく、上段・中段・下段の表示順を逆に変更
+- JSファイル名を reel-realfix.js に変更
+- index.html に ?v=2 を付けてキャッシュ対策
 
 配列:
 左: 275656136567465631656
