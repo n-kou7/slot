@@ -3,21 +3,19 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>WAN WAN REEL SMOOTH</title>
+<title>WAN WAN REEL CANVAS</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <main class="machine">
   <header>
-    <h1>WAN WAN REEL SMOOTH</h1>
+    <h1>WAN WAN REEL CANVAS</h1>
     <p id="message">レバーONでリール回転</p>
   </header>
 
   <section class="reel-window">
     <div class="payline"></div>
-    <div class="reel"><div class="strip" id="strip0"></div></div>
-    <div class="reel"><div class="strip" id="strip1"></div></div>
-    <div class="reel"><div class="strip" id="strip2"></div></div>
+    <canvas id="reelCanvas"></canvas>
   </section>
 
   <section class="controls">
@@ -36,6 +34,6 @@
     <div>右 <b id="info2">-</b></div>
   </section>
 </main>
-<script src="js/reel.js?v=3"></script>
+<script src="js/reel-canvas.js?v=1"></script>
 </body>
 </html>
