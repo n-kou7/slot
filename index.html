@@ -3,32 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>WAN WAN SLOT</title>
+<title>WAN WAN REEL TEST</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <main class="machine">
-  <header class="top">
-    <div class="display"><span>CREDIT</span><b id="credit">50</b></div>
-    <div class="title">
-      <img src="img/dog.png" alt="">
-      <div>
-        <h1>WAN WAN SLOT</h1>
-        <p id="message">BETしてレバーON</p>
-      </div>
-    </div>
-    <div class="display"><span>PAY</span><b id="payout">0</b></div>
+  <header>
+    <h1>WAN WAN REEL TEST</h1>
+    <p id="message">レバーONでリール回転</p>
   </header>
-
-  <section class="stats">
-    <span>G <b id="games">0</b></span>
-    <span>BIG <b id="bigCount">0</b></span>
-    <span>REG <b id="regCount">0</b></span>
-    <span>合算 <b id="totalRate">-</b></span>
-    <span>BET <b id="bet">0</b></span>
-    <span>差枚 <b id="diff">0</b></span>
-    <span>設定 <select id="setting"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option></select></span>
-  </section>
 
   <section class="reel-window">
     <div class="payline"></div>
@@ -37,25 +20,22 @@
     <div class="reel" id="reel2"></div>
   </section>
 
-  <section class="chance">
-    <div id="lamp" class="lamp">CHANCE</div>
-  </section>
-
   <section class="controls">
-    <button id="betBtn" class="btn bet">MAX BET</button>
     <button id="leverBtn" class="btn lever">レバーON</button>
     <div class="stop-row">
-      <button id="stop0" class="btn stop">左停止</button>
-      <button id="stop1" class="btn stop">中停止</button>
-      <button id="stop2" class="btn stop">右停止</button>
+      <button id="stop0" class="btn stop" disabled>左停止</button>
+      <button id="stop1" class="btn stop" disabled>中停止</button>
+      <button id="stop2" class="btn stop" disabled>右停止</button>
     </div>
-    <button id="resetBtn" class="btn reset">リセット</button>
+    <button id="resetBtn" class="btn reset">位置リセット</button>
   </section>
 
-  <section id="bonusPanel" class="bonus">
-    <b id="bonusType">-</b> BONUS中　残り <b id="bonusRemain">0</b> 枚
+  <section class="info">
+    <div>左: <b id="v0">-</b></div>
+    <div>中: <b id="v1">-</b></div>
+    <div>右: <b id="v2">-</b></div>
   </section>
 </main>
-<script type="module" src="js/game.js"></script>
+<script src="js/reel-test.js"></script>
 </body>
 </html>
