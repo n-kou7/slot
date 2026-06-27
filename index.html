@@ -3,37 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>WAN WAN REEL CANVAS</title>
+<title>WAN WAN SLOT</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <main class="machine">
-  <header>
-    <h1>WAN WAN REEL CANVAS</h1>
-    <p id="message">レバーONでリール回転</p>
-  </header>
+  <section class="top-panel">
+    <div class="meter"><span>CREDIT</span><b id="credit">50</b></div>
+    <div class="meter"><span>PAYOUT</span><b id="payout">0</b></div>
+    <div class="meter"><span>BET</span><b id="bet">0</b></div>
+    <div class="meter"><span>G</span><b id="games">0</b></div>
+  </section>
 
   <section class="reel-window">
-    <div class="payline"></div>
     <canvas id="reelCanvas"></canvas>
   </section>
 
-  <section class="controls">
-    <button id="leverBtn" class="btn lever">レバーON</button>
-    <div class="stop-row">
-      <button id="stop0" class="btn stop" disabled>左停止</button>
-      <button id="stop1" class="btn stop" disabled>中停止</button>
-      <button id="stop2" class="btn stop" disabled>右停止</button>
-    </div>
-    <button id="resetBtn" class="btn reset">位置リセット</button>
+  <section class="lamp-row">
+    <div id="lamp" class="lamp">CHANCE</div>
+    <div id="message" class="message">MAX BETしてレバーON</div>
   </section>
 
-  <section class="info">
-    <div>左 <b id="info0">-</b></div>
-    <div>中 <b id="info1">-</b></div>
-    <div>右 <b id="info2">-</b></div>
+  <section class="sub-panel">
+    <div>BIG <b id="bigCount">0</b></div>
+    <div>REG <b id="regCount">0</b></div>
+    <div>合算 <b id="totalRate">-</b></div>
+    <div>差枚 <b id="diff">0</b></div>
+    <div>設定
+      <select id="setting">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6" selected>6</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="bonus" id="bonusPanel">
+    <b id="bonusType">-</b> BONUS中　残り <b id="bonusRemain">0</b> 枚
+  </section>
+
+  <section class="controls">
+    <button id="betBtn" class="btn bet-btn">MAX BET</button>
+    <button id="leverBtn" class="btn lever-btn">レバーON</button>
+    <div class="stop-row">
+      <button id="stop0" class="btn stop-btn">左停止</button>
+      <button id="stop1" class="btn stop-btn">中停止</button>
+      <button id="stop2" class="btn stop-btn">右停止</button>
+    </div>
+    <button id="resetBtn" class="btn reset-btn">リセット</button>
   </section>
 </main>
-<script src="js/reel-canvas.js?v=1"></script>
+<script src="js/game.js?v=1"></script>
 </body>
 </html>
