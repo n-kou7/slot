@@ -3,33 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>WAN WAN REEL FIX</title>
+<title>WAN WAN REEL SMOOTH</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <main class="machine">
   <header>
-    <h1>WAN WAN REEL FIX</h1>
-    <p id="message">回転方向修正版 / レバーON</p>
+    <h1>WAN WAN REEL SMOOTH</h1>
+    <p id="message">レバーONでリール回転</p>
   </header>
 
   <section class="reel-window">
     <div class="payline"></div>
-    <div class="reel" id="reel0">
-      <div class="cell"><img id="r0_0"></div>
-      <div class="cell"><img id="r0_1"></div>
-      <div class="cell"><img id="r0_2"></div>
-    </div>
-    <div class="reel" id="reel1">
-      <div class="cell"><img id="r1_0"></div>
-      <div class="cell"><img id="r1_1"></div>
-      <div class="cell"><img id="r1_2"></div>
-    </div>
-    <div class="reel" id="reel2">
-      <div class="cell"><img id="r2_0"></div>
-      <div class="cell"><img id="r2_1"></div>
-      <div class="cell"><img id="r2_2"></div>
-    </div>
+    <div class="reel"><div class="strip" id="strip0"></div></div>
+    <div class="reel"><div class="strip" id="strip1"></div></div>
+    <div class="reel"><div class="strip" id="strip2"></div></div>
   </section>
 
   <section class="controls">
@@ -48,6 +36,6 @@
     <div>右 <b id="info2">-</b></div>
   </section>
 </main>
-<script src="js/reel-realfix.js?v=2"></script>
+<script src="js/reel.js?v=3"></script>
 </body>
 </html>

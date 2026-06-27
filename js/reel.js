@@ -18,7 +18,6 @@ const LABEL = {
   SEVEN:"7"
 };
 
-// 1=BAR, 2=ベル, 3=チェリー, 4=ピエロ, 5=犬, 6=ぶどう, 7=7
 const NUM = {"1":"BAR","2":"BELL","3":"CHERRY","4":"CLOWN","5":"DOG","6":"GRAPE","7":"SEVEN"};
 
 const STRIP_NUMBERS = [
@@ -28,87 +27,113 @@ const STRIP_NUMBERS = [
 ];
 
 const STRIPS = STRIP_NUMBERS.map(s => [...s].map(n => NUM[n]));
-
-// ここを変えると回転方向が逆になる。
-// 1で前回の逆方向に固定。
-const DIR = -1;
-
 const $ = id => document.getElementById(id);
 const mod = (n,m) => ((n % m) + m) % m;
+const H = 112;
 
+// 前回の「方向修正版」と同じ見た目で、スライドだけ滑らかにする。
 class Reel {
   constructor(i) {
     this.i = i;
     this.strip = STRIPS[i];
     this.len = this.strip.length;
-    this.pos = 0; // 中段のコマ番号
-    this.timer = null;
+    this.pos = 0; // 中段
+    this.stripEl = $("strip" + i);
     this.running = false;
     this.stopping = false;
-    this.imgs = [
-      $(`r${i}_0`),
-      $(`r${i}_1`),
-      $(`r${i}_2`)
+    this.stepTimer = null;
+    this.animating = false;
+    this.drawBase();
+  }
+
+  // 4コマ描画。transform -112px の状態で 2〜4番目が見える。
+  // 見える3段: 上=pos+1 / 中=pos / 下=pos-1
+  drawBase() {
+    const rows = [
+      mod(this.pos + 2, this.len),
+      mod(this.pos + 1, this.len),
+      mod(this.pos, this.len),
+      mod(this.pos - 1, this.len)
     ];
-    this.draw();
-  }
 
-  draw() {
-    const top = mod(this.pos - 1, this.len);
-    const mid = mod(this.pos, this.len);
-    const bottom = mod(this.pos + 1, this.len);
-    const arr = [top, mid, bottom];
-
-    for (let r = 0; r < 3; r++) {
-      const sym = this.strip[arr[r]];
-      this.imgs[r].src = IMG[sym];
-      this.imgs[r].alt = sym;
+    this.stripEl.innerHTML = "";
+    for (const idx of rows) {
+      const sym = this.strip[idx];
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.innerHTML = `<img src="${IMG[sym]}" alt="${sym}">`;
+      this.stripEl.appendChild(cell);
     }
+    this.stripEl.style.transition = "none";
+    this.stripEl.style.transform = `translate3d(0, -${H}px, 0)`;
   }
 
-  step() {
-    // 実際に見て逆なら DIR を -1 に変えるだけ
-    this.pos = mod(this.pos + DIR, this.len);
-    this.draw();
+  // 1コマぶん滑らかに進める。
+  // -112px → 0px に動かすことで、上の絵柄が下に落ちてくる見た目。
+  animateOne(duration, done) {
+    if (this.animating) return;
+    this.animating = true;
+    this.drawBase();
+
+    requestAnimationFrame(() => {
+      this.stripEl.style.transition = `transform ${duration}ms linear`;
+      this.stripEl.style.transform = "translate3d(0, 0px, 0)";
+
+      setTimeout(() => {
+        this.pos = mod(this.pos + 1, this.len);
+        this.drawBase();
+        this.animating = false;
+        if (done) done();
+      }, duration + 8);
+    });
   }
 
   start() {
     if (this.running) return;
     this.running = true;
     this.stopping = false;
-    this.timer = setInterval(() => this.step(), 55);
+
+    const loop = () => {
+      if (!this.running || this.stopping) return;
+      this.animateOne(58, () => {
+        this.stepTimer = setTimeout(loop, 0);
+      });
+    };
+    loop();
   }
 
   stop(callback) {
     if (!this.running || this.stopping) return;
     this.stopping = true;
+    clearTimeout(this.stepTimer);
 
-    // 少しだけ滑って止まる。最後は必ず整数コマなのでズレない。
-    let slip = 2 + Math.floor(Math.random() * 4);
+    let slip = 3 + Math.floor(Math.random() * 3);
+    const durations = [78, 105, 135, 170, 215, 260];
+
     const slide = () => {
-      this.step();
-      slip--;
-      if (slip > 0) {
-        setTimeout(slide, 80 + (4 - slip) * 35);
-      } else {
-        clearInterval(this.timer);
-        this.timer = null;
-        this.running = false;
-        this.stopping = false;
-        this.draw();
-        if (callback) callback();
-      }
+      const d = durations[Math.min(durations.length - 1, durations.length - slip)];
+      this.animateOne(d, () => {
+        slip--;
+        if (slip > 0) {
+          slide();
+        } else {
+          this.running = false;
+          this.stopping = false;
+          this.drawBase();
+          if (callback) callback();
+        }
+      });
     };
     slide();
   }
 
   reset() {
-    clearInterval(this.timer);
-    this.timer = null;
+    clearTimeout(this.stepTimer);
     this.pos = 0;
     this.running = false;
     this.stopping = false;
-    this.draw();
+    this.animating = false;
+    this.drawBase();
   }
 
   currentSymbol() {
@@ -120,9 +145,7 @@ const reels = [new Reel(0), new Reel(1), new Reel(2)];
 let spinning = false;
 let stopped = [false,false,false];
 
-function setMessage(t) {
-  $("message").textContent = t;
-}
+function setMessage(t){ $("message").textContent = t; }
 
 function updateInfo() {
   reels.forEach((r,i) => {
@@ -148,13 +171,11 @@ function leverOn() {
 
 function stopReel(i) {
   if (!spinning || stopped[i] || reels[i].stopping) return;
-
   stopped[i] = true;
   updateButtons();
 
   reels[i].stop(() => {
     updateInfo();
-
     if (stopped.every(Boolean)) {
       spinning = false;
       setMessage("停止完了。もう一度レバーON");
@@ -169,7 +190,7 @@ function resetAll() {
   spinning = false;
   stopped = [false,false,false];
   reels.forEach(r => r.reset());
-  setMessage("位置リセット。レバーONでリール回転");
+  setMessage("レバーONでリール回転");
   updateInfo();
   updateButtons();
 }
