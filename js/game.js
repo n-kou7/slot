@@ -33,8 +33,10 @@ class Reel{
   this.el=el;
   this.strip=STRIPS[i];
   this.len=this.strip.length;
-  this.offset=0;       // px。増えるほど絵柄が下へ流れる
-  this.pos=0;          // 中段にあるコマindex
+
+  // centerFloat = いま中段に来ている絵柄番号。整数ならピッタリ停止。
+  this.centerFloat=0;
+  this.pos=0;
   this.anim=null;
   this.lastTs=0;
   this.spinning=false;
@@ -48,7 +50,7 @@ class Reel{
 
  buildStrip(){
   this.stripEl.innerHTML="";
-  // ループ継ぎ目を見せないため3周分描画
+  // 継ぎ目が見えないように3周分描画
   for(let loop=0;loop<3;loop++){
    for(const key of this.strip){
     const d=document.createElement("div");
@@ -59,20 +61,14 @@ class Reel{
   }
  }
 
- centerIndexFromOffset(offset=this.offset){
-  // 上から下に流れるので、見た目の中段indexは offset/H 分だけ逆に進む
-  return mod(Math.round(offset/H), this.len);
- }
-
- syncPos(){
-  this.pos=this.centerIndexFromOffset();
- }
-
  apply(){
-  const total=this.len*H;
-  const y=mod(this.offset,total)-total-H;
+  const center=mod(this.centerFloat,this.len);
+  // 中央コピーの index=center を、リール窓の中段にぴったり合わせる。
+  // 窓高さは H*3。中段の中心は 1.5H。
+  // symbol中心をそこへ置くので translateY = H - (len + center) * H
+  const y = H - (this.len + center) * H;
   this.stripEl.style.transform=`translate3d(0,${y}px,0)`;
-  this.syncPos();
+  this.pos=mod(Math.round(this.centerFloat),this.len);
  }
 
  start(){
@@ -80,11 +76,15 @@ class Reel{
   this.spinning=true;
   this.stopping=false;
   this.lastTs=performance.now();
+
   const tick=(ts)=>{
    if(!this.spinning || this.stopping)return;
    const dt=(ts-this.lastTs)/1000;
    this.lastTs=ts;
-   this.offset -= SPEED*dt; // 逆方向回転
+
+   // 前回版の回転方向に合わせる。逆にしたい場合は -= を += に変える。
+   this.centerFloat -= (SPEED/H)*dt;
+
    this.apply();
    this.anim=requestAnimationFrame(tick);
   };
@@ -92,28 +92,33 @@ class Reel{
  }
 
  currentCenterSymbol(){
-  return this.strip[this.pos];
+  return this.strip[mod(Math.round(this.centerFloat),this.len)];
  }
 
  symbolAtCenterIfStop(stopPos){
   return this.strip[mod(stopPos,this.len)];
  }
 
+ currentIndex(){
+  return mod(Math.round(this.centerFloat),this.len);
+ }
+
  findStopForSymbol(symbolKey){
-  const current=this.centerIndexFromOffset();
-  // 4コマ以内で「その絵柄を中段に持ってくる」候補を探す
+  const current=this.currentIndex();
+
+  // 回転方向が centerFloat 減少なので、停止可能範囲は current, current-1...
   for(let slip=0;slip<=MAX_SLIP;slip++){
-   const idx=mod(current+slip,this.len);
+   const idx=mod(current-slip,this.len);
    if(this.strip[idx]===symbolKey)return idx;
   }
   return null;
  }
 
- offsetForCenterIndex(idx){
-  // centerIndexFromOffset(offset) == idx になるoffsetを、現在より先の位置で求める
-  const total=this.len*H;
-  let target= idx*H;
-  while(target >= this.offset - 2) target -= total;
+ targetFloatForIndex(idx){
+  // centerFloat を減少方向に進めて idx に止める
+  let target=this.centerFloat - mod(this.currentIndex()-idx,this.len);
+  // 近すぎると止まりが不自然なので最低0.4コマぶんは進める
+  if(this.centerFloat - target < 0.4) target -= this.len;
   return target;
  }
 
@@ -122,18 +127,20 @@ class Reel{
   this.stopping=true;
   cancelAnimationFrame(this.anim);
 
-  const start=this.offset;
-  const target=this.offsetForCenterIndex(idx);
+  const start=this.centerFloat;
+  const target=this.targetFloatForIndex(idx);
   const startTs=performance.now();
 
   const tick=(ts)=>{
    const t=Math.min(1,(ts-startTs)/STOP_MS);
-   this.offset=start+(target-start)*easeOutCubic(t);
+   this.centerFloat=start+(target-start)*easeOutCubic(t);
    this.apply();
+
    if(t<1){
     this.anim=requestAnimationFrame(tick);
    }else{
-    this.offset=target;
+    // 最後は必ず整数に丸めて、以後ズレが蓄積しないようにする
+    this.centerFloat=Math.round(target);
     this.apply();
     this.spinning=false;
     this.stopping=false;
@@ -143,6 +150,7 @@ class Reel{
   this.anim=requestAnimationFrame(tick);
  }
 }
+
 
 let reels=[0,1,2].map(i=>new Reel(i,$("reel"+i)));
 let state=JSON.parse(localStorage.getItem("wanwanSlotStateSmooth")||"null")||{
@@ -210,7 +218,7 @@ function choose(reel){
  }
 
  // ハズレ時は揃いを避ける
- const cur=reel.centerIndexFromOffset();
+ const cur=reel.currentIndex();
  for(let slip=0;slip<=MAX_SLIP;slip++){
   const idx=mod(cur-slip,reel.len);
   const sym=reel.symbolAtCenterIfStop(idx);
