@@ -31,7 +31,7 @@ const STRIPS = STRIP_NUMBERS.map(s => [...s].map(n => NUM[n]));
 
 // ここを変えると回転方向が逆になる。
 // 1で前回の逆方向に固定。
-const DIR = 1;
+const DIR = -1;
 
 const $ = id => document.getElementById(id);
 const mod = (n,m) => ((n % m) + m) % m;
