@@ -18,12 +18,12 @@ const STRIP_NUMBERS = [
 const STRIPS = STRIP_NUMBERS.map(s => [...s].map(n => NUM[n]));
 
 const SETTINGS = {
-  1:{big:1/273.1, reg:1/439.8, grape:1/6.5, cherry:1/35, clown:1/7.3, bell:1/1200},
-  2:{big:1/270.8, reg:1/399.6, grape:1/6.45, cherry:1/35, clown:1/7.3, bell:1/1200},
-  3:{big:1/266.4, reg:1/331.0, grape:1/6.35, cherry:1/35, clown:1/7.3, bell:1/1200},
-  4:{big:1/260.1, reg:1/315.1, grape:1/6.25, cherry:1/35, clown:1/7.3, bell:1/1200},
-  5:{big:1/255.0, reg:1/255.0, grape:1/6.15, cherry:1/35, clown:1/7.3, bell:1/1200},
-  6:{big:1/255.0, reg:1/255.0, grape:1/6.05, cherry:1/35, clown:1/7.3, bell:1/1200}
+  1:{big:2/273.1, reg:2/439.8, grape:2/6.5, cherry:2/35, clown:2/7.3, bell:2/1200},
+  2:{big:2/270.8, reg:2/399.6, grape:2/6.45, cherry:2/35, clown:2/7.3, bell:2/1200},
+  3:{big:2/266.4, reg:2/331.0, grape:2/6.35, cherry:2/35, clown:2/7.3, bell:2/1200},
+  4:{big:2/260.1, reg:2/315.1, grape:2/6.25, cherry:2/35, clown:2/7.3, bell:2/1200},
+  5:{big:2/255.0, reg:2/255.0, grape:2/6.15, cherry:2/35, clown:2/7.3, bell:2/1200},
+  6:{big:2/255.0, reg:2/255.0, grape:2/6.05, cherry:2/35, clown:2/7.3, bell:2/1200}
 };
 
 const $ = id => document.getElementById(id);
@@ -161,17 +161,22 @@ function drawFlag(){
   p+=s.bell;if(r<p)return{type:"BELL"};
   return{type:"MISS"};
 }
-function targetSymbol(){
-  if(flag.type==="GRAPE")return"GRAPE";
-  if(flag.type==="CHERRY"||flag.type==="CHERRY_BONUS")return"CHERRY";
-  if(flag.type==="CLOWN")return"CLOWN";
-  if(flag.type==="BELL")return"BELL";
+function targetSymbol(i){
+  // ボーナス確定中は小役より7/BARを優先
   if(state.bonusStock==="BIG")return"SEVEN";
   if(state.bonusStock==="REG")return"BAR";
+
+  if(flag.type==="GRAPE")return"GRAPE";
+  if(flag.type==="CLOWN")return"CLOWN";
+  if(flag.type==="BELL")return"BELL";
+
+  // チェリーは左リールだけ狙う。中右とは重複させない。
+  if((flag.type==="CHERRY"||flag.type==="CHERRY_BONUS") && i===0)return"CHERRY";
+
   return null;
 }
 function chooseStop(i){
-  const t=targetSymbol();
+  const t=targetSymbol(i);
   if(t){const idx=reels[i].find(t); if(idx!==null)return idx;}
   return null;
 }
@@ -208,35 +213,116 @@ function bonusPay(){
   const pay=Math.min(15,state.bonus.remain);
   state.bonus.remain-=pay; return pay;
 }
+function visibleRows(){
+  // Canvas表示と同じ: 上段=pos+1 / 中段=pos / 下段=pos-1
+  return ["top","middle","bottom"].map((name,rowIndex)=>{
+    return reels.map(r=>{
+      const base=r.centerIndex();
+      const idx = rowIndex===0 ? base+1 : rowIndex===1 ? base : base-1;
+      return r.symbolAt(idx);
+    });
+  });
+}
+
+function rowAll(sym){
+  return visibleRows().some(row=>row.every(x=>x===sym));
+}
+
+function rowBonusSymbol(sym){
+  return visibleRows().some(row=>row.every(x=>x===sym));
+}
+
+function clownBonusPattern(){
+  return visibleRows().some(row=>row[0]==="CLOWN" && (row[1]==="SEVEN" || row[1]==="BAR") && row[2]==="CLOWN");
+}
+
+function leftCherryInfo(){
+  const base=reels[0].centerIndex();
+  const top=reels[0].symbolAt(base+1);
+  const mid=reels[0].symbolAt(base);
+  const bottom=reels[0].symbolAt(base-1);
+  return {top,mid,bottom, has: top==="CHERRY" || mid==="CHERRY" || bottom==="CHERRY"};
+}
+
+function setRandomBonusStock(){
+  if(!state.bonusStock){
+    state.bonusStock = Math.random() < 0.55 ? "BIG" : "REG";
+  }
+}
+
 function finishGame(){
   spinning=false;
-  const line=reels.map(r=>r.centerSymbol());
   let pay=0, text="ハズレ";
 
+  const cherry=leftCherryInfo();
+  const cherryTop = cherry.top==="CHERRY";
+  const cherryMid = cherry.mid==="CHERRY";
+  const cherryBottom = cherry.bottom==="CHERRY";
+
   if(state.bonus){
-    pay=bonusPay(); text=`${state.bonus.type}中 ${pay}枚`;
-    if(state.bonus.remain<=0){state.bonus=null;text="BONUS終了";}
-  }else if(line.every(x=>x==="SEVEN")){
-    state.bonus={type:"BIG",remain:252}; state.bonusStock=null; state.big++; text="BIG BONUS開始！";
-  }else if(line.every(x=>x==="BAR")){
-    state.bonus={type:"REG",remain:96}; state.bonusStock=null; state.reg++; text="REG BONUS開始！";
-  }else if(line.every(x=>x==="CLOWN")){
-    state.replay=true; state.bet=3; text="再遊技。BETなしで次ゲーム";
-  }else if(line.every(x=>x==="GRAPE")){
-    pay=7; text="ぶどう 7枚";
-  }else if(line.includes("CHERRY")&&(flag.type==="CHERRY"||flag.type==="CHERRY_BONUS")){
-    pay=2; text="チェリー 2枚";
-  }else if(line.every(x=>x==="BELL")){
-    pay=10; text="ベル 10枚";
-  }else if(state.bonusStock){
+    pay=bonusPay();
+    text=`${state.bonus.type}中 ${pay}枚`;
+    if(state.bonus.remain<=0){
+      state.bonus=null;
+      text="BONUS終了";
+    }
+  }
+  else if(rowBonusSymbol("SEVEN")){
+    state.bonus={type:"BIG",remain:252};
+    state.bonusStock=null;
+    state.big++;
+    text="BIG BONUS開始！";
+  }
+  else if(rowBonusSymbol("BAR")){
+    state.bonus={type:"REG",remain:96};
+    state.bonusStock=null;
+    state.reg++;
+    text="REG BONUS開始！";
+  }
+  else if(cherry.has && !cherryMid){
+    setRandomBonusStock();
+    pay = (cherryTop || cherryBottom) ? 4 : 0;
+    text=`チェリー ${pay}枚 / ボーナス確定！`;
+  }
+  else if(clownBonusPattern()){
+    setRandomBonusStock();
+    text="ボーナス確定！";
+  }
+  else if(cherry.has){
+    if(cherryMid) pay=2;
+    else if(cherryTop || cherryBottom) pay=4;
+    text=`チェリー ${pay}枚`;
+  }
+  else if(rowAll("GRAPE")){
+    pay=7;
+    text="ぶどう 7枚";
+  }
+  else if(rowAll("BELL")){
+    pay=10;
+    text="ベル 10枚";
+  }
+  else if(rowAll("CLOWN")){
+    state.replay=true;
+    state.bet=3;
+    text="再遊技。BETなしで次ゲーム";
+  }
+  else if(state.bonusStock){
     text=`${state.bonusStock}成立中。狙って揃えてね`;
   }
 
   if(!state.bonus&&!state.replay)state.bet=0;
-  if(pay>0){state.credit+=pay;state.diff+=pay;}
-  state.payout=pay; state.games++;
-  msg(text); renderUI(); buttons();
+  if(pay>0){
+    state.credit+=pay;
+    state.diff+=pay;
+  }
+
+  state.payout=pay;
+  state.games++;
+  msg(text);
+  renderUI();
+  buttons();
 }
+
 function resetAll(){
   localStorage.removeItem("wanwanSlotV1"); location.reload();
 }
